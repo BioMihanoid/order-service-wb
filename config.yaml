@@ -1,0 +1,7 @@
+db:
+  host: localhost
+  port: 5434
+  username: postgres
+  password: postgres
+  db_name: order_service_wb_db
+  ssl_mode: disable
