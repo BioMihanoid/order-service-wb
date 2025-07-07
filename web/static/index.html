@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Order Viewer</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #orderData { margin-top: 20px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+<h1>Order Viewer</h1>
+<input type="text" id="orderId" placeholder="Enter Order ID">
+<button onclick="fetchOrder()">Get Order</button>
+<div id="orderData"></div>
+
+<script>
+    function fetchOrder() {
+        const orderId = document.getElementById('orderId').value;
+        if (!orderId) {
+            alert('Please enter Order ID');
+            return;
+        }
+
+        fetch(`/order/${orderId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Order not found');
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('orderData').innerHTML =
+                    `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            })
+            .catch(error => {
+                document.getElementById('orderData').innerHTML =
+                    `<div style="color: red;">Error: ${error.message}</div>`;
+            });
+    }
+</script>
+</body>
+</html>

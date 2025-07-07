@@ -1,12 +1,20 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"log"
+	"net/http"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 
+	"order-service-wb/internal/api"
 	"order-service-wb/internal/repository"
+	"order-service-wb/internal/service"
 	"order-service-wb/pkg/config"
 )
 
@@ -22,5 +30,34 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
-	_ = repository.NewOrderRepository(db)
+
+	repo := repository.NewOrderRepository(db)
+	serv := service.NewOrderService(repo)
+	handler := api.NewHandler(serv)
+
+	server := &http.Server{
+		Addr:    ":8081",
+		Handler: handler.InitRouter(),
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	go func() {
+		log.Println("Starting server on :8081")
+		if err = server.ListenAndServe(); err != nil && !errors.Is(http.ErrServerClosed, err) {
+			log.Fatalf("failed to start server: %v", err)
+		}
+	}()
+
+	<-ctx.Done()
+	log.Println("Shutting down server...")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err = server.Shutdown(shutdownCtx); err != nil {
+		log.Fatalf("failed to gracefully shutdown server: %v", err)
+	}
+	log.Println("Server gracefully stopped")
 }
