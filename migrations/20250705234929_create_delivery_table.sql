@@ -1,14 +1,14 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE delivery (
-    order_uid VARCHAR PRIMARY KEY REFERENCES orders(order_uid),
-    name VARCHAR,
-    phone VARCHAR,
-    zip VARCHAR,
-    city VARCHAR,
-    address VARCHAR,
-    region VARCHAR,
-    email VARCHAR
+    order_uid VARCHAR PRIMARY KEY REFERENCES orders(order_uid) ON DELETE CASCADE,
+    name VARCHAR NOT NULL,
+    phone VARCHAR NOT NULL,
+    zip VARCHAR NOT NULL,
+    city VARCHAR NOT NULL,
+    address VARCHAR NOT NULL,
+    region VARCHAR NOT NULL,
+    email VARCHAR NOT NULL
 );
 -- +goose StatementEnd
 

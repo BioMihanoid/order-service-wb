@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -44,4 +45,9 @@ func NewConfig() *Config {
 	}
 
 	return &config
+}
+
+func (d *DbConfig) GetDSN() string {
+	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		d.Host, d.Port, d.Username, d.Password, d.Database, d.SSLMode)
 }

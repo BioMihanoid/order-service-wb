@@ -2,18 +2,18 @@
 -- +goose StatementBegin
 CREATE TABLE items (
     id SERIAL PRIMARY KEY,
-    order_uid VARCHAR REFERENCES orders(order_uid),
-    chrt_id BIGINT,
-    track_number VARCHAR,
-    price INTEGER,
-    rid VARCHAR,
-    name VARCHAR,
-    sale INTEGER,
-    size VARCHAR,
-    total_price INTEGER,
-    nm_id BIGINT,
-    brand VARCHAR,
-    status INTEGER
+    order_uid VARCHAR NOT NULL REFERENCES orders(order_uid) ON DELETE CASCADE,
+    chrt_id BIGINT NOT NULL,
+    track_number VARCHAR NOT NULL,
+    price INTEGER NOT NULL,
+    rid VARCHAR NOT NULL,
+    name VARCHAR NOT NULL,
+    sale INTEGER NOT NULL,
+    size VARCHAR NOT NULL,
+    total_price INTEGER NOT NULL,
+    nm_id BIGINT NOT NULL,
+    brand VARCHAR NOT NULL,
+    status INTEGER NOT NULL
 );
 -- +goose StatementEnd
 
