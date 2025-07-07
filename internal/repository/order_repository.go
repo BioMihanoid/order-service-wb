@@ -141,5 +141,92 @@ func (r *orderRepo) CreateOrder(ctx context.Context, order *models.Order) error 
 }
 
 func (r *orderRepo) GetOrderByID(ctx context.Context, orderID string) (*models.Order, error) {
-	return nil, nil
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {
+		log.Println("failed to begin transaction:", err)
+		return nil, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func(tx *sqlx.Tx) {
+		err = tx.Rollback()
+		if err != nil {
+			log.Println("failed to rollback transaction:", err)
+		}
+	}(tx)
+
+	if err = ctx.Err(); err != nil {
+		log.Println("context error before execution:", err)
+		return nil, fmt.Errorf("context cancelled before execution: %w", err)
+	}
+
+	var order models.Order
+	q := `SELECT 
+			order_uid, track_number, entry, locale,
+			internal_signature, customer_id, delivery_service,
+			shardkey, sm_id, date_created, oof_shard
+		FROM orders WHERE order_uid = $1
+		`
+	err = tx.GetContext(ctx, &order, q, orderID)
+	if err != nil {
+		log.Println("failed to get order by ID:", err)
+		return nil, fmt.Errorf("failed to get order by ID: %w", err)
+	}
+
+	if err = ctx.Err(); err != nil {
+		log.Println("context error after getting order:", err)
+		return nil, fmt.Errorf("context cancelled after getting order: %w", err)
+	}
+
+	q = `SELECT
+			chrt_id, track_number, price, rid, name, sale,
+			size, total_price, nm_id, brand, status
+		FROM items WHERE order_uid = $1
+		`
+	err = tx.SelectContext(ctx, &order.Items, q, orderID)
+	if err != nil {
+		log.Println("failed to get items for order:", err)
+		return nil, fmt.Errorf("failed to get items for order: %w", err)
+	}
+
+	if err = ctx.Err(); err != nil {
+		log.Println("context error after getting items:", err)
+		return nil, fmt.Errorf("context cancelled after getting items: %w", err)
+	}
+
+	q = `SELECT
+			transaction, request_id, currency, provider,
+			amount, payment_dt, bank, delivery_cost, goods_total, custom_fee
+		FROM payment WHERE order_uid = $1
+		`
+	err = tx.GetContext(ctx, &order.Payment, q, orderID)
+	if err != nil {
+		log.Println("failed to get payment for order:", err)
+		return nil, fmt.Errorf("failed to get payment for order: %w", err)
+	}
+
+	if err = ctx.Err(); err != nil {
+		log.Println("context error after getting payment:", err)
+		return nil, fmt.Errorf("context cancelled after getting payment: %w", err)
+	}
+
+	q = `SELECT
+			name, phone, zip, city, address, region, email
+		FROM delivery WHERE order_uid = $1
+		`
+	err = tx.GetContext(ctx, &order.Delivery, q, orderID)
+	if err != nil {
+		log.Println("failed to get delivery for order:", err)
+		return nil, fmt.Errorf("failed to get delivery for order: %w", err)
+	}
+
+	if err = ctx.Err(); err != nil {
+		log.Println("context error after getting delivery:", err)
+		return nil, fmt.Errorf("context cancelled after getting delivery: %w", err)
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Println("failed to commit transaction:", err)
+		return nil, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return &order, nil
 }
