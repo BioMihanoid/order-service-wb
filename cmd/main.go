@@ -13,13 +13,17 @@ import (
 	_ "github.com/lib/pq"
 
 	"order-service-wb/internal/api"
+	"order-service-wb/internal/cache"
 	"order-service-wb/internal/repository"
 	"order-service-wb/internal/service"
 	"order-service-wb/pkg/config"
 )
 
 func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 	conf := config.NewConfig()
+
 	db, err := sqlx.Connect("postgres", conf.DbConfig.GetDSN())
 	defer func(db *sqlx.DB) {
 		err = db.Close()
@@ -32,19 +36,22 @@ func main() {
 	}
 
 	repo := repository.NewOrderRepository(db)
-	serv := service.NewOrderService(repo)
+	c := cache.NewCache(conf.Cache.Size)
+	serv := service.NewOrderService(repo, c)
+
+	if err = serv.LoadCache(context.Background(), conf.Cache.Size); err != nil {
+		log.Fatalf("failed to load cache: %v", err)
+	}
+
 	handler := api.NewHandler(serv)
 
 	server := &http.Server{
-		Addr:    ":8081",
+		Addr:    ":" + conf.Server.Port,
 		Handler: handler.InitRouter(),
 	}
 
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
-
 	go func() {
-		log.Println("Starting server on :8081")
+		log.Println("Starting server on :" + conf.Server.Port)
 		if err = server.ListenAndServe(); err != nil && !errors.Is(http.ErrServerClosed, err) {
 			log.Fatalf("failed to start server: %v", err)
 		}

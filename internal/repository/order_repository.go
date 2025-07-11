@@ -13,6 +13,7 @@ import (
 type OrderRepository interface {
 	CreateOrder(ctx context.Context, order *models.Order) error
 	GetOrderByID(ctx context.Context, orderID string) (*models.Order, error)
+	GetAllOrders(ctx context.Context, limit int) ([]*models.Order, error)
 }
 
 type orderRepo struct {
@@ -229,4 +230,28 @@ func (r *orderRepo) GetOrderByID(ctx context.Context, orderID string) (*models.O
 	}
 
 	return &order, nil
+}
+
+func (r *orderRepo) GetAllOrders(ctx context.Context, limit int) ([]*models.Order, error) {
+	q := `SELECT order_uid FROM orders ORDER BY date_created DESC LIMIT $1`
+
+	rows, err := r.db.QueryxContext(ctx, q, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var orders []*models.Order
+	for rows.Next() {
+		var id string
+		if err = rows.Scan(&id); err != nil {
+			continue
+		}
+		order, err := r.GetOrderByID(ctx, id)
+		if err == nil {
+			orders = append(orders, order)
+		}
+	}
+
+	return orders, nil
 }

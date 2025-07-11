@@ -5,3 +5,9 @@ db:
   password: postgres
   db_name: order_service_wb_db
   ssl_mode: disable
+
+server:
+  port: "8081"
+
+cache:
+  size: 10

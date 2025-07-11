@@ -10,7 +10,9 @@ import (
 )
 
 type Config struct {
-	DbConfig DbConfig `mapstructure:"db"`
+	DbConfig DbConfig     `mapstructure:"db"`
+	Server   ServerConfig `mapstructure:"server"`
+	Cache    CacheConfig  `mapstructure:"cache"`
 }
 
 type DbConfig struct {
@@ -20,6 +22,14 @@ type DbConfig struct {
 	Password string `mapstructure:"password"`
 	Database string `mapstructure:"db_name"`
 	SSLMode  string `mapstructure:"ssl_mode"`
+}
+
+type ServerConfig struct {
+	Port string `mapstructure:"port"`
+}
+
+type CacheConfig struct {
+	Size int `mapstructure:"size"`
 }
 
 func NewConfig() *Config {
