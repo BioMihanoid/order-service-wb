@@ -13,6 +13,7 @@ type Config struct {
 	DbConfig DbConfig     `mapstructure:"db"`
 	Server   ServerConfig `mapstructure:"server"`
 	Cache    CacheConfig  `mapstructure:"cache"`
+	Kafka    KafkaConfig  `mapstructure:"kafka"`
 }
 
 type DbConfig struct {
@@ -30,6 +31,12 @@ type ServerConfig struct {
 
 type CacheConfig struct {
 	Size int `mapstructure:"size"`
+}
+
+type KafkaConfig struct {
+	Broker string `mapstructure:"broker"`
+	Topic  string `mapstructure:"topic"`
+	Group  string `mapstructure:"group"`
 }
 
 func NewConfig() *Config {

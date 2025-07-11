@@ -18,6 +18,7 @@ func NewCache(size int) *Cache {
 		store: make(map[string]models.Order),
 		order: make([]string, 0, size),
 		size:  size,
+		mu:    &sync.RWMutex{},
 	}
 }
 

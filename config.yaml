@@ -11,3 +11,8 @@ server:
 
 cache:
   size: 10
+
+kafka:
+  broker: "localhost:9092"
+  topic: "order"
+  group: "order-group"

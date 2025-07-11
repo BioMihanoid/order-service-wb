@@ -32,12 +32,14 @@ func (r *orderRepo) CreateOrder(ctx context.Context, order *models.Order) error 
 		log.Println("failed to begin transaction:", err)
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer func(tx *sqlx.Tx) {
-		err = tx.Rollback()
-		if err != nil {
-			log.Println("failed to rollback transaction:", err)
+	defer func() {
+		if p := recover(); p != nil {
+			_ = tx.Rollback()
+			panic(p)
+		} else if err != nil {
+			_ = tx.Rollback()
 		}
-	}(tx)
+	}()
 
 	if err = ctx.Err(); err != nil {
 		log.Println("context error before execution:", err)
@@ -82,8 +84,8 @@ func (r *orderRepo) CreateOrder(ctx context.Context, order *models.Order) error 
 		default:
 			_, err = tx.ExecContext(ctx, q,
 				order.OrderUID, item.ChrtID, item.TrackNumber, item.Price,
-				item.Rid, item.Name, item.Sale, item.Size,
-				item.TotalPrice, item.NmID, item.Brand, item.Status,
+				item.Rid, item.Name, item.Sale, item.TotalPrice, item.Size,
+				item.NmID, item.Brand, item.Status,
 			)
 			if err != nil {
 				log.Println("failed to execute insert items query:", err)
