@@ -42,3 +42,21 @@ down: migrate-down
 status: migrate-status
 create: migrate-create
 force: migrate-force
+
+run:
+	go run ./cmd/app
+
+generator:
+	go run ./cmd/generator
+
+test:
+	go test cover ./...
+
+docker-up:
+	docker compose up -d
+
+docker-down:
+	docker compose down
+
+lint:
+	golangci-lint run
