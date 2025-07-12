@@ -1,11 +1,11 @@
 package models
 
 type Delivery struct {
-	Name   string `json:"name"`
-	Phone  string `json:"phone"`
-	Zip    string `json:"zip"`
-	City   string `json:"city"`
-	Addr   string `json:"address"`
-	Region string `json:"region"`
-	Email  string `json:"email"`
+	Name   string `json:"name" db:"name" validate:"required"`
+	Phone  string `json:"phone" db:"phone" validate:"required"`
+	Zip    string `json:"zip" db:"zip" validate:"required"`
+	City   string `json:"city" db:"city" validate:"required"`
+	Addr   string `json:"address" db:"address" validate:"required"`
+	Region string `json:"region" db:"region" validate:"required"`
+	Email  string `json:"email" db:"email" validate:"required,email"`
 }

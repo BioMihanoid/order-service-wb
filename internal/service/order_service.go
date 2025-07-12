@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 
+	"github.com/go-playground/validator/v10"
+
 	"order-service-wb/internal/cache"
 	"order-service-wb/internal/models"
 	"order-service-wb/internal/repository"
@@ -15,14 +17,16 @@ type OrderService interface {
 }
 
 type Service struct {
-	repo  repository.OrderRepository
-	cache *cache.Cache
+	repo      repository.OrderRepository
+	cache     *cache.Cache
+	validator *validator.Validate
 }
 
 func NewOrderService(repo repository.OrderRepository, cache *cache.Cache) OrderService {
 	return &Service{
-		repo:  repo,
-		cache: cache,
+		repo:      repo,
+		cache:     cache,
+		validator: validator.New(),
 	}
 }
 
@@ -51,6 +55,9 @@ func (s *Service) LoadCache(ctx context.Context, limit int) error {
 }
 
 func (s *Service) CreateOrder(ctx context.Context, order *models.Order) error {
+	if err := s.validator.Struct(order); err != nil {
+		return err
+	}
 	if err := s.repo.CreateOrder(ctx, order); err != nil {
 		return err
 	}

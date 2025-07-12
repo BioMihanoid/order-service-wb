@@ -69,7 +69,7 @@ func generateFakeOrder() models.Order {
 		},
 		Payment: models.Payment{
 			Transaction:  uid,
-			RequestID:    "",
+			RequestID:    "2234555",
 			Currency:     "USD",
 			Provider:     "wbpay",
 			Amount:       1000,

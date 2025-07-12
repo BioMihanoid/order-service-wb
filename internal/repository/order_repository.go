@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 
@@ -33,11 +35,8 @@ func (r *orderRepo) CreateOrder(ctx context.Context, order *models.Order) error 
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() {
-		if p := recover(); p != nil {
-			_ = tx.Rollback()
-			panic(p)
-		} else if err != nil {
-			_ = tx.Rollback()
+		if err = tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
+			log.Println("failed to rollback transaction:", err)
 		}
 	}()
 
@@ -149,12 +148,11 @@ func (r *orderRepo) GetOrderByID(ctx context.Context, orderID string) (*models.O
 		log.Println("failed to begin transaction:", err)
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer func(tx *sqlx.Tx) {
-		err = tx.Rollback()
-		if err != nil {
+	defer func() {
+		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
 			log.Println("failed to rollback transaction:", err)
 		}
-	}(tx)
+	}()
 
 	if err = ctx.Err(); err != nil {
 		log.Println("context error before execution:", err)
