@@ -6,15 +6,20 @@ import (
 	"order-service-wb/internal/models"
 )
 
-type Cache struct {
+type Cache interface {
+	Set(id string, order models.Order)
+	Get(id string) (models.Order, bool)
+}
+
+type MyCache struct {
 	mu    *sync.RWMutex
 	store map[string]models.Order
 	order []string
 	size  int
 }
 
-func NewCache(size int) *Cache {
-	return &Cache{
+func NewCache(size int) Cache {
+	return &MyCache{
 		store: make(map[string]models.Order),
 		order: make([]string, 0, size),
 		size:  size,
@@ -22,7 +27,7 @@ func NewCache(size int) *Cache {
 	}
 }
 
-func (c *Cache) Set(id string, order models.Order) {
+func (c *MyCache) Set(id string, order models.Order) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if _, ok := c.store[id]; ok {
@@ -40,7 +45,7 @@ func (c *Cache) Set(id string, order models.Order) {
 	c.order = append(c.order, id)
 }
 
-func (c *Cache) Get(id string) (models.Order, bool) {
+func (c *MyCache) Get(id string) (models.Order, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	val, ok := c.store[id]

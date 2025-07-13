@@ -18,11 +18,11 @@ type OrderService interface {
 
 type Service struct {
 	repo      repository.OrderRepository
-	cache     *cache.Cache
+	cache     cache.Cache
 	validator *validator.Validate
 }
 
-func NewOrderService(repo repository.OrderRepository, cache *cache.Cache) OrderService {
+func NewOrderService(repo repository.OrderRepository, cache cache.Cache) OrderService {
 	return &Service{
 		repo:      repo,
 		cache:     cache,
